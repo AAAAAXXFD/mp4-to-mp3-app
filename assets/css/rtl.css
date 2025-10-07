@@ -1,0 +1,21 @@
+/* RTL & Persian Font Support */
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+body {
+    font-family: Vazirmatn, 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    text-align: right;
+}
+
+.logo-section {
+    flex-direction: row-reverse;
+}
+
+.action-buttons {
+    flex-direction: row-reverse;
+}
+
+.results-table th,
+.results-table td {
+    text-align: right;
+}
