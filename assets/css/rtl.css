@@ -1,21 +1,41 @@
-/* RTL & Persian Font Support */
+/* === RTL & Persian Font Support === */
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
 
+/* بدنه با فونت وزیری و راست‌چین */
 body {
-    font-family: Vazirmatn, 'Segoe UI', Tahoma, sans-serif;
-    direction: rtl;
-    text-align: right;
+  font-family: Vazirmatn, 'Segoe UI', Tahoma, sans-serif;
+  direction: rtl;
+  text-align: right;
+  background: var(--bg-secondary);
+  color: var(--text);
 }
 
+/* معکوس کردن جهت فلکس‌باکس در لوگو */
 .logo-section {
-    flex-direction: row-reverse;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 1rem;
 }
 
+/* معکوس کردن جهت فلکس‌باکس برای دکمه‌های اکشن */
 .action-buttons {
-    flex-direction: row-reverse;
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: center;
 }
 
+/* راست‌چین کردن متن در جدول نتایج */
 .results-table th,
 .results-table td {
-    text-align: right;
+  text-align: right;
+}
+
+/* اطمینان از همخوانی سایر اجزا با راست‌چین */
+.section, 
+.app-header, 
+.main-content {
+  direction: rtl;
 }
