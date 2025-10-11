@@ -1,3 +1,11 @@
+window.state = window.state || {
+  files: [],
+  targetDuration: 60,
+  ffmpeg: null,
+  currentProcessing: 0,
+  results: []
+};
+
 // ===== MP4 to MP3 Speed Adjuster - Main Application =====
 // Progressive Web App for converting videos to MP3 and adjusting speed
 
