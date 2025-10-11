@@ -277,8 +277,9 @@ async function loadFFmpeg() {
   for (const baseURL of baseURLs) {
     try {
       await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+        coreURL: await toBlobURL(`/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`/ffmpeg-core.wasm`, 'application/wasm'),
+        workerURL: await toBlobURL(`/ffmpeg-core.worker.js`, 'text/javascript')
       });
       window.state.ffmpeg = ffmpeg;
       elements.ffmpegProgress.style.width = '100%';
