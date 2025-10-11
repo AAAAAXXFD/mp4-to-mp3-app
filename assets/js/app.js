@@ -263,8 +263,9 @@ async function loadFFmpeg() {
   const { toBlobURL } = window.FFmpegUtil;
 
   const baseURLs = [
-    'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd',
-    'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd'
+    location.origin + '/mp4-to-mp3-app/assets/vendor/@ffmpeg/core',
+    'https://cdn.jsdelivr.net/npm/@ffmpeg/core.12.10/dist/umd',
+    'https://unpkg.com/@ffmpeg/core.12.10/dist/umd'
   ];
 
   const ffmpeg = new FFmpeg();
