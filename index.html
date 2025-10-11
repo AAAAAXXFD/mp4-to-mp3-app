@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-  <base href="/mp4-to-mp3-app/">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>تبدیل ویدیو به MP3 و تنظیم سرعت</title>
+  <base href="/mp4-to-mp3-app/">
   <meta name="theme-color" content="#1a73e8">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="assets/css/main.css">
@@ -16,7 +16,7 @@
     <header class="app-header">
       <div class="header-content">
         <div class="logo-section">
-          <svg class="logo-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="logo-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
@@ -27,25 +27,92 @@
     </header>
 
     <main class="main-content">
-      <!-- فرم‌ها و بخش‌ها -->
+      <!-- مرحله آپلود -->
       <section id="uploadSection" class="section active">
-        <!-- محتوای آپلود فایل -->
+        <div class="section-header">
+          <span class="step-badge">مرحله ۱</span>
+          <h2 class="section-title">آپلود ویدیوها</h2>
+          <p class="section-description">فایل‌های MP4 را بکشید و رها کنید یا از دکمه انتخاب کنید</p>
+        </div>
+
+        <input id="fileInput" type="file" accept="video/*" multiple hidden>
+        <div id="dropZone" class="drop-zone">
+          <svg class="drop-icon" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <p class="drop-text">برای انتخاب فایل کلیک کنید یا فایل‌ها را اینجا رها کنید</p>
+          <button id="selectFilesBtn" class="btn btn-primary">انتخاب فایل‌ها</button>
+        </div>
+
+        <div id="filesList" class="files-list hidden">
+          <div class="list-header">
+            <div>تعداد فایل‌ها: <span id="filesCount">0</span></div>
+            <button id="clearFilesBtn" class="btn-secondary btn">پاک کردن همه</button>
+          </div>
+          <ul id="filesContainer"></ul>
+          <div class="action-buttons">
+            <button id="continueBtn" class="btn btn-primary">ادامه</button>
+          </div>
+        </div>
       </section>
+
+      <!-- مرحله تنظیمات -->
       <section id="settingsSection" class="section hidden">
-        <!-- تنظیمات سرعت و تبدیل -->
+        <div class="section-header">
+          <span class="step-badge">مرحله ۲</span>
+          <h2 class="section-title">تنظیم مدت هدف</h2>
+          <p class="section-description">مدت زمان هدف برای فایل خروجی (بر حسب ثانیه)</p>
+        </div>
+        <div class="form-group">
+          <label for="targetDuration">مدت هدف (ثانیه)</label>
+          <input id="targetDuration" class="form-input" type="number" min="1" value="60">
+        </div>
+        <div class="action-buttons">
+          <button id="backBtn" class="btn btn-secondary">بازگشت</button>
+          <button id="startProcessBtn" class="btn btn-primary">شروع پردازش</button>
+        </div>
       </section>
+
+      <!-- مرحله پردازش -->
       <section id="processingSection" class="section hidden">
-        <!-- بخش پردازش و انتظار -->
+        <div id="ffmpegLoading" class="processing-card">
+          <p>در حال بارگذاری ابزار پردازش...</p>
+          <div class="progress-bar"><div id="ffmpegProgress" class="progress-fill" style="width:0%"></div></div>
+        </div>
+        <div id="filesProcessing" class="processing-card hidden">
+          <p>در حال پردازش: <span id="currentFileIndex">0</span>/<span id="totalFiles">0</span></p>
+          <p id="currentFileName">—</p>
+          <div class="progress-bar"><div id="fileProgress" class="progress-fill" style="width:0%"></div></div>
+        </div>
       </section>
+
+      <!-- مرحله نتایج -->
       <section id="resultsSection" class="section hidden">
-        <!-- نمایش نتایج نهایی -->
+        <div class="section-header">
+          <span class="step-badge success">پایان</span>
+          <h2 class="section-title">نتایج</h2>
+        </div>
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>نام فایل</th>
+              <th>مدت اصلی</th>
+              <th>مدت جدید</th>
+              <th>نسبت سرعت</th>
+              <th>دانلود</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody"></tbody>
+        </table>
+        <div class="action-buttons">
+          <button id="startOverBtn" class="btn btn-secondary">شروع مجدد</button>
+        </div>
       </section>
     </main>
   </div>
 
   <div id="toast" class="toast hidden"></div>
 
-  <!-- اسکریپت‌ها -->
   <script src="assets/js/app.js"></script>
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
   <script src="https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js"></script>
