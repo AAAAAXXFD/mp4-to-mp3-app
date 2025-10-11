@@ -2,9 +2,9 @@
   "name": "تبدیل ویدیو به MP3",
   "short_name": "MP4toMP3",
   "description": "تبدیل ویدیو به MP3 و تنظیم سرعت",
-  "start_url": "/",
+  "start_url": "/mp4-to-mp3-app/",
+  "scope": "/mp4-to-mp3-app/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1a73e8",
-  "orientation": "portrait-primary",
+  "theme_color": "#1a73e8"
 }
