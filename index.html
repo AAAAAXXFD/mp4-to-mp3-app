@@ -122,5 +122,10 @@
   <script src="assets/js/app.js"></script>
   <script src="assets/vendor/@ffmpeg/ffmpeg/ffmpeg.js"></script>
   <script src="assets/vendor/@ffmpeg/util/index.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/mp4-to-mp3-app/service-worker.js');
+    }
+  </script>
 </body>
 </html>
