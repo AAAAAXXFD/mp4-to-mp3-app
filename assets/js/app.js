@@ -254,7 +254,6 @@ async function startProcessing() {
 
 // ===== FFmpeg Loading - FIXED for GitHub Pages (Single-Thread) =====
 async function loadFFmpeg() {
-  // اطمینان از وجود شیء state
   window.state = window.state || {};
   if (window.state.ffmpeg) return;
   
@@ -262,20 +261,22 @@ async function loadFFmpeg() {
   showToast('در حال بارگذاری ابزار پردازش...', 'info');
   
   try {
-    // چک کردن FFmpeg global object
     if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
       throw new Error('FFmpeg library not loaded');
     }
     
     const { createFFmpeg, fetchFile } = window.FFmpeg;
     
-    // تشخیص وجود SharedArrayBuffer
+    // تشخیص محیط
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1';
     const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
     
-    // ایجاد instance با نسخه مناسب
     let ffmpeg;
-    if (hasSharedArrayBuffer) {
-      console.log('🚀 Using multi-thread FFmpeg');
+    
+    if (isLocalhost && hasSharedArrayBuffer) {
+      // برای localhost با SharedArrayBuffer
+      console.log('🚀 Using multi-thread FFmpeg (localhost)');
       ffmpeg = createFFmpeg({
         log: false,
         corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
@@ -288,10 +289,12 @@ async function loadFFmpeg() {
         }
       });
     } else {
-      console.log('🚀 Using single-thread FFmpeg (GitHub Pages compatible)');
+      // برای GitHub Pages بدون SharedArrayBuffer
+      console.log('🚀 Using single-thread FFmpeg (GitHub Pages)');
       ffmpeg = createFFmpeg({
         log: false,
-        corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+        mainName: 'main',
         progress: ({ ratio }) => {
           const percent = Math.round(ratio * 100);
           if (elements && elements.ffmpegProgress) {
@@ -305,7 +308,6 @@ async function loadFFmpeg() {
     console.log('Loading FFmpeg core...');
     await ffmpeg.load();
     
-    // ذخیره در state
     window.state.ffmpeg = ffmpeg;
     window.fetchFile = fetchFile;
     
