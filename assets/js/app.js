@@ -275,7 +275,7 @@ async function loadFFmpeg() {
     let ffmpeg;
     
     if (isLocalhost && hasSharedArrayBuffer) {
-      // برای localhost با SharedArrayBuffer
+      // localhost با SharedArrayBuffer
       console.log('🚀 Using multi-thread FFmpeg (localhost)');
       ffmpeg = createFFmpeg({
         log: false,
@@ -289,12 +289,11 @@ async function loadFFmpeg() {
         }
       });
     } else {
-      // برای GitHub Pages بدون SharedArrayBuffer
-      console.log('🚀 Using single-thread FFmpeg (GitHub Pages)');
+      // GitHub Pages - استفاده از نسخه کامل 0.11.1 به جای st
+      console.log('🚀 Using FFmpeg 0.11.1 full version (GitHub Pages)');
       ffmpeg = createFFmpeg({
-        log: false,
-        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
-        mainName: 'main',
+        log: true,  // فعال کنید تا خطاها را ببینیم
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.11.1/dist/ffmpeg-core.js',  // نسخه کامل، نه st
         progress: ({ ratio }) => {
           const percent = Math.round(ratio * 100);
           if (elements && elements.ffmpegProgress) {
@@ -323,8 +322,33 @@ async function loadFFmpeg() {
     
   } catch (error) {
     console.error('❌ FFmpeg load error:', error);
-    showToast('خطا در بارگذاری: ' + error.message, 'error');
-    throw error;
+    
+    // اگر نسخه 0.11.1 کار نکرد، با 0.12.2 امتحان کنید
+    try {
+      console.log('Trying fallback version 0.12.2...');
+      const ffmpeg = createFFmpeg({
+        log: true,
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.12.2/dist/esm/ffmpeg-core.js',
+        progress: ({ ratio }) => {
+          const percent = Math.round(ratio * 100);
+          if (elements && elements.ffmpegProgress) {
+            elements.ffmpegProgress.style.width = percent + '%';
+            elements.ffmpegProgress.textContent = percent + '%';
+          }
+        }
+      });
+      
+      await ffmpeg.load();
+      window.state.ffmpeg = ffmpeg;
+      window.fetchFile = fetchFile;
+      
+      console.log('✅ FFmpeg loaded with fallback version!');
+      showToast('ابزار پردازش آماده شد', 'success');
+      
+    } catch (fallbackError) {
+      console.error('❌ Fallback also failed:', fallbackError);
+      throw error;
+    }
   }
 }
 
