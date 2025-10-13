@@ -82,7 +82,6 @@ function checkBrowserSupport() {
     FileAPI: typeof File !== 'undefined',
     AudioAPI: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
     WebAssembly: typeof WebAssembly !== 'undefined'
-    // حذف SharedArrayBuffer چک
   };
 
   const unsupported = Object.entries(requiredFeatures)
