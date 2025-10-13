@@ -275,7 +275,7 @@ async function loadFFmpeg() {
     let ffmpeg;
     
     if (isLocalhost && hasSharedArrayBuffer) {
-      // localhost با SharedArrayBuffer
+      // برای localhost با SharedArrayBuffer
       console.log('🚀 Using multi-thread FFmpeg (localhost)');
       ffmpeg = createFFmpeg({
         log: false,
@@ -289,11 +289,12 @@ async function loadFFmpeg() {
         }
       });
     } else {
-      // GitHub Pages - استفاده از نسخه کامل 0.11.1 به جای st
-      console.log('🚀 Using FFmpeg 0.11.1 full version (GitHub Pages)');
+      // برای GitHub Pages بدون SharedArrayBuffer
+      console.log('🚀 Using single-thread FFmpeg (GitHub Pages)');
       ffmpeg = createFFmpeg({
-        log: true,  // فعال کنید تا خطاها را ببینیم
-        corePath: 'https://unpkg.com/@ffmpeg/core@0.11.1/dist/ffmpeg-core.js',  // نسخه کامل، نه st
+        log: false,
+        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+        mainName: 'main',
         progress: ({ ratio }) => {
           const percent = Math.round(ratio * 100);
           if (elements && elements.ffmpegProgress) {
@@ -322,33 +323,8 @@ async function loadFFmpeg() {
     
   } catch (error) {
     console.error('❌ FFmpeg load error:', error);
-    
-    // اگر نسخه 0.11.1 کار نکرد، با 0.12.2 امتحان کنید
-    try {
-      console.log('Trying fallback version 0.12.2...');
-      const ffmpeg = createFFmpeg({
-        log: true,
-        corePath: 'https://unpkg.com/@ffmpeg/core@0.12.2/dist/esm/ffmpeg-core.js',
-        progress: ({ ratio }) => {
-          const percent = Math.round(ratio * 100);
-          if (elements && elements.ffmpegProgress) {
-            elements.ffmpegProgress.style.width = percent + '%';
-            elements.ffmpegProgress.textContent = percent + '%';
-          }
-        }
-      });
-      
-      await ffmpeg.load();
-      window.state.ffmpeg = ffmpeg;
-      window.fetchFile = fetchFile;
-      
-      console.log('✅ FFmpeg loaded with fallback version!');
-      showToast('ابزار پردازش آماده شد', 'success');
-      
-    } catch (fallbackError) {
-      console.error('❌ Fallback also failed:', fallbackError);
-      throw error;
-    }
+    showToast('خطا در بارگذاری: ' + error.message, 'error');
+    throw error;
   }
 }
 
@@ -487,42 +463,66 @@ async function adjustAudioSpeed(audioBlob, speedRatio) {
   console.log(`🎚️ Adjusting speed by ${speedRatio.toFixed(2)}x`);
   
   try {
-    // تبدیل blob به Uint8Array
     const audioData = new Uint8Array(await audioBlob.arrayBuffer());
-    
-    // نوشتن فایل ورودی
     ffmpeg.FS('writeFile', inputName, audioData);
     
-    // محاسبه atempo (بین 0.5 تا 2.0)
-    let tempoFilter = '';
-    let tempo = speedRatio;
+    const isGitHubPages = window.location.hostname.includes('github.io');
     
-    // FFmpeg atempo محدودیت 0.5 تا 2.0 دارد
-    // برای سرعت‌های بالاتر باید زنجیره‌ای استفاده کنیم
-    if (tempo > 4) {
-      tempoFilter = 'atempo=2.0,atempo=2.0';
-    } else if (tempo > 2) {
-      tempoFilter = `atempo=2.0,atempo=${(tempo / 2).toFixed(2)}`;
-    } else if (tempo < 0.5) {
-      tempoFilter = 'atempo=0.5';
+    if (!isGitHubPages) {
+      // Localhost - استفاده از atempo
+      let tempoFilter = '';
+      let tempo = speedRatio;
+      
+      if (tempo > 4) {
+        tempoFilter = 'atempo=2.0,atempo=2.0';
+      } else if (tempo > 2) {
+        tempoFilter = `atempo=2.0,atempo=${(tempo / 2).toFixed(2)}`;
+      } else if (tempo < 0.5) {
+        tempoFilter = 'atempo=0.5';
+      } else {
+        tempoFilter = `atempo=${tempo.toFixed(2)}`;
+      }
+      
+      console.log('Using atempo filter:', tempoFilter);
+      
+      await ffmpeg.run(
+        '-i', inputName,
+        '-filter:a', tempoFilter,
+        '-acodec', 'libmp3lame',
+        '-q:a', '2',
+        outputName
+      );
     } else {
-      tempoFilter = `atempo=${tempo.toFixed(2)}`;
+      // GitHub Pages - روش جایگزین بدون atempo
+      console.log('Using alternative method for GitHub Pages');
+      
+      // روش 1: تغییر sample rate (تغییر pitch و سرعت)
+      const baseSampleRate = 44100;
+      const newSampleRate = Math.round(baseSampleRate * speedRatio);
+      
+      // محدود به رنج معقول
+      const targetRate = Math.min(Math.max(newSampleRate, 8000), 48000);
+      
+      console.log(`Changing sample rate: ${baseSampleRate} -> ${targetRate}`);
+      
+      await ffmpeg.run(
+        '-i', inputName,
+        '-ar', String(targetRate),
+        '-acodec', 'libmp3lame',
+        '-q:a', '2',
+        outputName
+      );
+      
+      // اگر می‌خواهید pitch را حفظ کنید (فقط سرعت تغییر کند)
+      // باید از روش پیچیده‌تری استفاده کنید که ممکن است در نسخه st کار نکند
     }
     
-    console.log('Using filter:', tempoFilter);
-    
-    // اجرای FFmpeg با فیلتر atempo
-    await ffmpeg.run(
-      '-i', inputName,
-      '-filter:a', tempoFilter,
-      '-vn',
-      '-acodec', 'libmp3lame',
-      '-q:a', '2',
-      outputName
-    );
-    
-    // خواندن خروجی
     const data = ffmpeg.FS('readFile', outputName);
+    
+    // بررسی خروجی
+    if (!data || data.length === 0) {
+      throw new Error('Output file is empty');
+    }
     
     // پاک کردن فایل‌های موقت
     try {
@@ -530,13 +530,13 @@ async function adjustAudioSpeed(audioBlob, speedRatio) {
       ffmpeg.FS('unlink', outputName);
     } catch (e) {}
     
-    console.log(`✅ Speed adjusted successfully`);
+    console.log(`✅ Process completed (${data.length} bytes)`);
     return new Blob([data.buffer], { type: 'audio/mp3' });
     
   } catch (error) {
     console.error('Speed adjustment error:', error);
     
-    // Clean up
+    // پاک کردن فایل‌های موقت
     try {
       ffmpeg.FS('unlink', inputName);
       ffmpeg.FS('unlink', outputName);
