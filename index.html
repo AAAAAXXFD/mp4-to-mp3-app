@@ -189,23 +189,21 @@
   <!-- ========== Scripts ========== -->
   
   <!-- FFmpeg از CDN -->
-  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.1/dist/ffmpeg.min.js"></script>
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
   <script src="assets/js/app.js"></script>
   
   <script>
-    // Service Worker با مسیر نسبی
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // تغییر مسیر Service Worker به مسیر صحیح
-        navigator.serviceWorker.register('service-worker.js', {
-          scope: '/'
-        })
-          .then(reg => {
-            console.log('✅ Service Worker registered at:', reg.scope);
-          })
-          .catch(err => {
-            console.log('⚠️ Service Worker failed:', err);
-          });
+        // تشخیص خودکار مسیر
+        const isGitHubPages = window.location.hostname === 'aaaaaxxfd.github.io';
+        const swPath = isGitHubPages 
+          ? '/mp4-to-mp3-app/service-worker.js'
+          : '/service-worker.js';
+        
+        navigator.serviceWorker.register(swPath)
+          .then(reg => console.log('✅ Service Worker registered'))
+          .catch(err => console.log('⚠️ Service Worker failed:', err));
       });
     }
   </script>
