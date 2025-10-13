@@ -188,24 +188,15 @@
 
   <!-- ========== Scripts ========== -->
   
-  <!-- FFmpeg از CDN -->
+  <!-- FFmpeg از CDN - نسخه 0.11.6 -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+  
+  <!-- Main Application -->
   <script src="assets/js/app.js"></script>
   
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // تشخیص خودکار مسیر
-        const isGitHubPages = window.location.hostname === 'aaaaaxxfd.github.io';
-        const swPath = isGitHubPages 
-          ? '/mp4-to-mp3-app/service-worker.js'
-          : '/service-worker.js';
-        
-        navigator.serviceWorker.register(swPath)
-          .then(reg => console.log('✅ Service Worker registered'))
-          .catch(err => console.log('⚠️ Service Worker failed:', err));
-      });
-    }
+    console.log('🎵 MP4 to MP3 Converter - Ready');
+    console.log('FFmpeg available:', typeof window.FFmpeg !== 'undefined');
   </script>
 </body>
 </html>
