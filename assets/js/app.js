@@ -291,7 +291,7 @@ async function loadFFmpeg() {
       console.log('🚀 Using single-thread FFmpeg (GitHub Pages compatible)');
       ffmpeg = createFFmpeg({
         log: false,
-        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.10.0/dist/ffmpeg-core.js',
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
         progress: ({ ratio }) => {
           const percent = Math.round(ratio * 100);
           if (elements && elements.ffmpegProgress) {
