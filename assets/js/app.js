@@ -81,8 +81,8 @@ function checkBrowserSupport() {
   const requiredFeatures = {
     FileAPI: typeof File !== 'undefined',
     AudioAPI: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
-    WebAssembly: typeof WebAssembly !== 'undefined',
-    SharedArrayBuffer: typeof SharedArrayBuffer !== 'undefined'
+    WebAssembly: typeof WebAssembly !== 'undefined'
+    // حذف SharedArrayBuffer چون اجباری نیست
   };
 
   const unsupported = Object.entries(requiredFeatures)
@@ -90,7 +90,7 @@ function checkBrowserSupport() {
     .map(([key]) => key);
 
   if (unsupported.length > 0) {
-    showToast(`مرورگر یا سرور از ویژگی‌های لازم پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
+    showToast(`مرورگر از ویژگی‌های لازم پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
     console.error('Missing features:', unsupported);
     return false;
   }
@@ -252,7 +252,7 @@ async function startProcessing() {
   }
 }
 
-// ===== FFmpeg Loading - FIXED for 0.10.0 API =====
+// ===== FFmpeg Loading - FIXED for GitHub Pages (Single-Thread) =====
 async function loadFFmpeg() {
   // اطمینان از وجود شیء state
   window.state = window.state || {};
@@ -269,20 +269,38 @@ async function loadFFmpeg() {
     
     const { createFFmpeg, fetchFile } = window.FFmpeg;
     
-    // ایجاد instance
-    const ffmpeg = createFFmpeg({
-      log: false,
-      // استفاده از CDN برای core
-      corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
-      progress: ({ ratio }) => {
-        const percent = Math.round(ratio * 100);
-        // بروز رسانی نوار پیشرفت در صورت وجود عنصر
-        if (elements && elements.ffmpegProgress) {
-          elements.ffmpegProgress.style.width = percent + '%';
-          elements.ffmpegProgress.textContent = percent + '%';
+    // تشخیص وجود SharedArrayBuffer
+    const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined';
+    
+    // ایجاد instance با نسخه مناسب
+    let ffmpeg;
+    if (hasSharedArrayBuffer) {
+      console.log('🚀 Using multi-thread FFmpeg');
+      ffmpeg = createFFmpeg({
+        log: false,
+        corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',
+        progress: ({ ratio }) => {
+          const percent = Math.round(ratio * 100);
+          if (elements && elements.ffmpegProgress) {
+            elements.ffmpegProgress.style.width = percent + '%';
+            elements.ffmpegProgress.textContent = percent + '%';
+          }
         }
-      }
-    });
+      });
+    } else {
+      console.log('🚀 Using single-thread FFmpeg (GitHub Pages compatible)');
+      ffmpeg = createFFmpeg({
+        log: false,
+        corePath: 'https://unpkg.com/@ffmpeg/core-st@0.10.0/dist/ffmpeg-core.js',
+        progress: ({ ratio }) => {
+          const percent = Math.round(ratio * 100);
+          if (elements && elements.ffmpegProgress) {
+            elements.ffmpegProgress.style.width = percent + '%';
+            elements.ffmpegProgress.textContent = percent + '%';
+          }
+        }
+      });
+    }
     
     console.log('Loading FFmpeg core...');
     await ffmpeg.load();
