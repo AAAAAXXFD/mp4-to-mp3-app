@@ -263,8 +263,8 @@ async function loadFFmpeg() {
     
     const ffmpeg = createFFmpeg({
       log: false,
-      // نسخه single-thread که SharedArrayBuffer نمی‌خواهد
-      corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+      // نسخه 0.11.1 - پایدار و سازگار
+      corePath: 'https://unpkg.com/@ffmpeg/core@0.11.1/dist/ffmpeg-core.js',
       progress: ({ ratio }) => {
         const percent = Math.round(ratio * 100);
         if (elements.ffmpegProgress) {
@@ -274,14 +274,20 @@ async function loadFFmpeg() {
       }
     });
     
+    console.log('Loading FFmpeg...');
     await ffmpeg.load();
     
     window.state.ffmpeg = ffmpeg;
     window.fetchFile = fetchFile;
     
     console.log('✅ FFmpeg loaded!');
-    showToast('ابزار پردازش آماده شد', 'success');
     
+    if (elements.ffmpegProgress) {
+      elements.ffmpegProgress.style.width = '100%';
+      elements.ffmpegProgress.textContent = '100%';
+    }
+    
+    showToast('ابزار پردازش آماده شد', 'success');
   } catch (error) {
     console.error('❌ Error:', error);
     showToast('خطا: ' + error.message, 'error');
