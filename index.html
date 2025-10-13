@@ -194,9 +194,29 @@
   <!-- Main Application -->
   <script src="assets/js/app.js"></script>
   
+  <!-- Service Worker Registration -->
   <script>
     console.log('🎵 MP4 to MP3 Converter - Ready');
     console.log('FFmpeg available:', typeof window.FFmpeg !== 'undefined');
+    
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          // استفاده از مسیر نسبی برای GitHub Pages
+          const registration = await navigator.serviceWorker.register('./service-worker.js');
+          console.log('✅ Service Worker registered successfully');
+          
+          registration.addEventListener('updatefound', () => {
+            console.log('🔄 New Service Worker update found');
+          });
+        } catch (error) {
+          console.error('⚠️ Service Worker registration failed:', error);
+        }
+      });
+    } else {
+      console.log('❌ Service Worker not supported in this browser');
+    }
   </script>
 </body>
 </html>
