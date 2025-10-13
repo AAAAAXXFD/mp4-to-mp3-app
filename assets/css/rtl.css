@@ -1,41 +1,302 @@
-/* === RTL & Persian Font Support === */
+/* ===== MP4 to MP3 Adjuster - RTL Support ===== */
+
+/* === Persian/Arabic Font === */
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
 
-/* بدنه با فونت وزیری و راست‌چین */
+/* === Global RTL Settings === */
+* {
+  direction: rtl;
+}
+
+html {
+  direction: rtl;
+}
+
 body {
-  font-family: Vazirmatn, 'Segoe UI', Tahoma, sans-serif;
+  font-family: Vazirmatn, -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
   direction: rtl;
   text-align: right;
-  background: var(--bg-secondary);
-  color: var(--text);
 }
 
-/* معکوس کردن جهت فلکس‌باکس در لوگو */
+/* === Layout Adjustments === */
+
+/* App Container */
+.app-container {
+  direction: rtl;
+}
+
+/* Sections */
+.section {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Header */
+.app-header,
+.header-content {
+  direction: rtl;
+}
+
 .logo-section {
+  flex-direction: row-reverse;
+}
+
+/* Main Content */
+.main-content {
+  direction: rtl;
+}
+
+/* === Section Headers === */
+.section-header {
+  text-align: center;
+  direction: rtl;
+}
+
+.section-title,
+.section-description {
+  direction: rtl;
+}
+
+/* === Drop Zone === */
+.drop-zone {
+  direction: rtl;
+  text-align: center;
+}
+
+.drop-text {
+  direction: rtl;
+}
+
+/* === Files List === */
+.files-list {
+  direction: rtl;
+}
+
+.list-header {
   display: flex;
   flex-direction: row-reverse;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
 }
 
-/* معکوس کردن جهت فلکس‌باکس برای دکمه‌های اکشن */
+.files-container {
+  direction: rtl;
+}
+
+.file-item {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  text-align: right;
+}
+
+/* === Form Elements === */
+.form-group {
+  direction: rtl;
+  text-align: right;
+}
+
+.form-label {
+  text-align: right;
+  direction: rtl;
+}
+
+.form-input {
+  direction: rtl;
+  text-align: right;
+}
+
+.form-help {
+  text-align: right;
+  direction: rtl;
+}
+
+/* === Buttons === */
 .action-buttons {
   display: flex;
   flex-direction: row-reverse;
   gap: 1rem;
-  margin-top: 2rem;
   justify-content: center;
 }
 
-/* راست‌چین کردن متن در جدول نتایج */
+.btn {
+  direction: rtl;
+}
+
+/* Button icons alignment */
+.btn svg,
+.btn::before {
+  margin-left: 0.5rem;
+  margin-right: 0;
+}
+
+/* === Progress Bars === */
+.progress-bar {
+  direction: ltr; /* Progress bars معمولاً LTR هستند */
+}
+
+.progress-fill {
+  direction: ltr;
+}
+
+.progress-text {
+  direction: rtl;
+}
+
+/* === Processing Card === */
+.processing-card {
+  direction: rtl;
+  text-align: center;
+}
+
+.processing-text,
+.current-file-name,
+.processing-note {
+  direction: rtl;
+  text-align: center;
+}
+
+/* === Results Table === */
+.results-table {
+  direction: rtl;
+}
+
 .results-table th,
 .results-table td {
   text-align: right;
-}
-
-/* اطمینان از همخوانی سایر اجزا با راست‌چین */
-.section, 
-.app-header, 
-.main-content {
   direction: rtl;
 }
+
+.results-table thead {
+  direction: rtl;
+}
+
+.results-table tbody {
+  direction: rtl;
+}
+
+/* === Toast Notifications === */
+.toast {
+  direction: rtl;
+  text-align: center;
+}
+
+/* برای RTL، toast از راست می‌آید */
+@media (max-width: 768px) {
+  .toast {
+    right: 1rem;
+    left: 1rem;
+  }
+}
+
+/* === Text Alignment Utilities === */
+.text-right {
+  text-align: right !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+/* === Number Formatting === */
+/* اعداد فارسی */
+.persian-numbers {
+  font-feature-settings: 'numr', 'ss01';
+}
+
+/* اعداد انگلیسی */
+input[type="number"],
+.progress-text,
+.files-count strong,
+#filesCount,
+#currentFileIndex,
+#totalFiles {
+  direction: ltr;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* === SVG Icons === */
+svg {
+  transform: scaleX(-1); /* معکوس کردن آیکون‌ها برای RTL */
+}
+
+.drop-icon,
+.logo-icon {
+  transform: scaleX(1); /* برخی آیکون‌ها نباید معکوس شوند */
+}
+
+/* === Flexbox Corrections === */
+.flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+/* === Spacing Corrections === */
+/* در RTL، margin و padding معکوس می‌شوند */
+.ml-auto {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.mr-auto {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* === Float Corrections === */
+.float-left {
+  float: right;
+}
+
+.float-right {
+  float: left;
+}
+
+/* === Border Radius Corrections === */
+/* اگر گوشه‌های مشخص داشتیم */
+.rounded-left {
+  border-top-right-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.rounded-right {
+  border-top-left-radius: var(--radius);
+  border-bottom-left-radius: var(--radius);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* === Scrollbar RTL === */
+.files-container::-webkit-scrollbar {
+  direction: ltr;
+}
+
+/* === Print RTL === */
+@media print {
+  body {
+    direction: rtl;
+    text-align: right;
+  }
+}
+
+/* === Accessibility === */
+/* اطمینان از خوانایی متن فارسی */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* بهبود خوانایی اعداد */
+.numeric {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* === End of RTL Styles === */

@@ -1,3 +1,7 @@
+// ===== MP4 to MP3 Speed Adjuster - Main Application =====
+// Progressive Web App for converting videos to MP3 and adjusting speed
+
+// ===== Global State =====
 window.state = {
   files: [],
   targetDuration: 60,
@@ -6,6 +10,7 @@ window.state = {
   results: []
 };
 
+// ===== DOM Elements =====
 const elements = {
   uploadSection: document.getElementById('uploadSection'),
   settingsSection: document.getElementById('settingsSection'),
@@ -39,8 +44,7 @@ const elements = {
   toast: document.getElementById('toast')
 };
 
-// Initialization
-
+// ===== Initialization =====
 function init() {
   setupEventListeners();
   if (!checkBrowserSupport()) {
@@ -57,8 +61,7 @@ function disableAllControls() {
   elements.startProcessBtn.disabled = true;
 }
 
-// Event Listeners Setup
-
+// ===== Event Listeners Setup =====
 function setupEventListeners() {
   elements.selectFilesBtn.addEventListener('click', () => elements.fileInput.click());
   elements.fileInput.addEventListener('change', handleFileSelect);
@@ -73,26 +76,28 @@ function setupEventListeners() {
   elements.startOverBtn.addEventListener('click', resetApp);
 }
 
-// Browser Support Check
-
+// ===== Browser Support Check =====
 function checkBrowserSupport() {
   const requiredFeatures = {
     FileAPI: typeof File !== 'undefined',
     AudioAPI: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
-    WebAssembly: typeof WebAssembly !== 'undefined'
+    WebAssembly: typeof WebAssembly !== 'undefined',
+    SharedArrayBuffer: typeof SharedArrayBuffer !== 'undefined'
   };
 
-  const unsupported = Object.entries(requiredFeatures).filter(([_, supported]) => !supported).map(([key]) => key);
+  const unsupported = Object.entries(requiredFeatures)
+    .filter(([_, supported]) => !supported)
+    .map(([key]) => key);
 
   if (unsupported.length > 0) {
-    showToast(`مرورگر شما از این برنامه پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
+    showToast(`مرورگر یا سرور از ویژگی‌های لازم پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
+    console.error('Missing features:', unsupported);
     return false;
   }
   return true;
 }
 
-// File handling
-
+// ===== File Handling =====
 function handleFileSelect(e) {
   const files = Array.from(e.target.files);
   addFiles(files);
@@ -123,10 +128,12 @@ function addFiles(newFiles) {
   const maxFiles = 14;
   const currentCount = window.state.files.length;
   const remaining = maxFiles - currentCount;
+  
   if (remaining === 0) {
     showToast('حداکثر 14 فایل می‌توانید انتخاب کنید', 'warning');
     return;
   }
+  
   const filesToAdd = newFiles.slice(0, remaining);
   window.state.files.push(...filesToAdd);
   updateFilesList();
@@ -137,10 +144,12 @@ function addFiles(newFiles) {
 function updateFilesList() {
   elements.filesCount.textContent = window.state.files.length;
   elements.filesContainer.innerHTML = '';
+  
   window.state.files.forEach((file, index) => {
     const li = document.createElement('li');
+    li.className = 'file-item';
     li.innerHTML = `
-      <span>${file.name} (${formatFileSize(file.size)})</span>
+      <span>${escapeHtml(file.name)} (${formatFileSize(file.size)})</span>
       <button onclick="removeFile(${index})" class="btn-text">حذف</button>
     `;
     elements.filesContainer.appendChild(li);
@@ -163,18 +172,32 @@ function clearFiles() {
   showToast('همه فایل‌ها پاک شدند', 'info');
 }
 
-// Navigation between sections
-
+// ===== Navigation Between Sections =====
 function showSection(section) {
-  elements.uploadSection.classList.remove('active');
-  elements.settingsSection.classList.remove('active');
-  elements.processingSection.classList.remove('active');
-  elements.resultsSection.classList.remove('active');
-  switch (section) {
-    case 'upload': elements.uploadSection.classList.add('active'); break;
-    case 'settings': elements.settingsSection.classList.add('active'); break;
-    case 'processing': elements.processingSection.classList.add('active'); break;
-    case 'results': elements.resultsSection.classList.add('active'); break;
+  console.log('🔹 Navigating to:', section);
+  
+  // پنهان کردن همه sections
+  const sections = {
+    upload: elements.uploadSection,
+    settings: elements.settingsSection,
+    processing: elements.processingSection,
+    results: elements.resultsSection
+  };
+  
+  // حذف active و اضافه hidden از همه
+  Object.values(sections).forEach(s => {
+    if (s) {
+      s.classList.remove('active');
+      s.classList.add('hidden');
+    }
+  });
+  
+  // نمایش section مورد نظر
+  const targetSection = sections[section];
+  if (targetSection) {
+    targetSection.classList.remove('hidden');
+    targetSection.classList.add('active');
+    console.log('✅ Section shown:', section);
   }
 }
 
@@ -186,23 +209,26 @@ function showSettings() {
   showSection('settings');
 }
 
-// Processing workflow
-
+// ===== Processing Workflow =====
 async function startProcessing() {
   const durationInput = parseInt(elements.targetDuration.value);
   if (!durationInput || durationInput < 1) {
     showToast('لطفاً مدت زمان معتبری وارد کنید', 'error');
     return;
   }
+  
   window.state.targetDuration = durationInput;
   window.state.results = [];
   window.state.currentProcessing = 0;
   showSection('processing');
 
   try {
+    // Load FFmpeg
     await loadFFmpeg();
 
     elements.totalFiles.textContent = window.state.files.length;
+    
+    // Process each file
     for (let i = 0; i < window.state.files.length; i++) {
       window.state.currentProcessing = i + 1;
       elements.currentFileIndex.textContent = i + 1;
@@ -216,92 +242,51 @@ async function startProcessing() {
 
       const progress = ((i + 1) / window.state.files.length) * 100;
       elements.fileProgress.style.width = `${progress}%`;
+      elements.fileProgress.textContent = `${Math.round(progress)}%`;
     }
+    
     showResults();
   } catch (error) {
-    console.error('Processing error:', error);
+    console.error('❌ Processing error:', error);
     showToast('خطا در پردازش فایل‌ها: ' + error.message, 'error');
   }
 }
 
+// ===== FFmpeg Loading - FIXED for 0.10.0 API =====
 async function loadFFmpeg() {
-  if (window.state.ffmpeg) return;
-
-  showToast('در حال بارگذاری ابزار پردازش...', 'info');
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('بارگذاری اسکریپت شکست خورد: ' + src));
-      document.head.appendChild(script);
+  if (!window.state.ffmpeg) {
+    window.state.ffmpeg = createFFmpeg({
+      log: false,
+      corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+      // بدون mainName
     });
+    await window.state.ffmpeg.load();
   }
-
-  async function loadUMD() {
-    if (window.FFmpeg && window.FFmpegUtil) return;
-    const cdnPairs = [
-      ['https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js', 'https://unpkg.com/@ffmpeg/util@0.12.10/dist/umd/index.js'],
-      ['https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js', 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.10/dist/umd/index.js']
-    ];
-
-    for (const [ffmpegUrl, utilUrl] of cdnPairs) {
-      try {
-        await loadScript(ffmpegUrl);
-        await loadScript(utilUrl);
-        if (window.FFmpeg && window.FFmpegUtil) return;
-      } catch { }
-    }
-    throw new Error('امکان بارگذاری ابزار FFmpeg وجود ندارد');
-  }
-
-  await loadUMD();
-
-  const { FFmpeg } = window.FFmpeg;
-  const { toBlobURL } = window.FFmpegUtil;
-
-  const baseURLs = [
-  location.origin + '/mp4-to-mp3-app/assets/vendor/@ffmpeg/core'
-];
-
-  const ffmpeg = new FFmpeg();
-  ffmpeg.on('progress', ({ progress }) => {
-    elements.ffmpegProgress.style.width = ((progress ?? 0) * 100) + '%';
-  });
-
-  let lastError = null;
-  for (const baseURL of baseURLs) {
-    try {
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`/ffmpeg-core.wasm`, 'application/wasm'),
-        workerURL: await toBlobURL(`/ffmpeg-core.worker.js`, 'text/javascript')
-      });
-      window.state.ffmpeg = ffmpeg;
-      elements.ffmpegProgress.style.width = '100%';
-      showToast('ابزار پردازش آماده شد', 'success');
-      return;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError || new Error('بارگذاری FFmpeg core شکست خورد');
+  return window.state.ffmpeg;
 }
 
+// ===== File Processing =====
 async function processFile(file) {
   const startTime = Date.now();
 
   try {
+    // ابتدا تبدیل به MP3
     const mp3Blob = await convertToMP3(file);
     const originalDuration = await getAudioDuration(mp3Blob);
 
+    // محاسبه نسبت سرعت
     const speedRatio = originalDuration / window.state.targetDuration;
-    // در این نسخه، تغییر سرعت واقعی فایل صوتی انجام نمی‌شود، فقط سرعت پلی‌بک تنظیم می‌شود
-    const adjustedBlob = mp3Blob;
+    
+    // اگر نیاز به تغییر سرعت است
+    let adjustedBlob = mp3Blob;
+    let newDuration = originalDuration;
+    
+    if (Math.abs(speedRatio - 1) > 0.01) { // اگر تغییر بیش از 1% باشد
+      console.log(`⚡ Adjusting speed by ${speedRatio.toFixed(2)}x`);
+      adjustedBlob = await adjustAudioSpeed(mp3Blob, speedRatio);
+      newDuration = await getAudioDuration(adjustedBlob);
+    }
 
-    const newDuration = await getAudioDuration(adjustedBlob);
     const processingTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
     return {
@@ -314,7 +299,7 @@ async function processFile(file) {
       processingTime
     };
   } catch (error) {
-    console.error('خطا در پردازش فایل:', file.name, error);
+    console.error('❌ خطا در پردازش فایل:', file.name, error);
     return {
       name: file.name,
       status: 'error',
@@ -325,17 +310,63 @@ async function processFile(file) {
 
 async function convertToMP3(videoFile) {
   const ffmpeg = window.state.ffmpeg;
-  const inputName = `input${Date.now()}.mp4`;
-  const outputName = 'output.mp3';
-
-  await ffmpeg.writeFile(inputName, await fetchFile(videoFile));
-  await ffmpeg.exec(['-i', inputName, '-vn', '-acodec', 'libmp3lame', '-q:a', '2', outputName]);
-  const data = await ffmpeg.readFile(outputName);
-
-  await ffmpeg.deleteFile(inputName);
-  await ffmpeg.deleteFile(outputName);
-
-  return new Blob([data.buffer], { type: 'audio/mp3' });
+  
+  if (!ffmpeg || !ffmpeg.isLoaded()) {
+    throw new Error('FFmpeg is not loaded');
+  }
+  
+  const inputName = `input_${Date.now()}.mp4`;
+  const outputName = `output_${Date.now()}.mp3`;
+  
+  console.log(`🎬 Converting ${videoFile.name} to MP3...`);
+  
+  try {
+    // استفاده از fetchFile از window
+    const fileData = await window.fetchFile(videoFile);
+    
+    // نوشتن فایل
+    ffmpeg.FS('writeFile', inputName, fileData);
+    
+    console.log('File written, starting conversion...');
+    
+    // اجرای تبدیل
+    await ffmpeg.run(
+      '-i', inputName,
+      '-vn',
+      '-acodec', 'libmp3lame',
+      '-q:a', '2',
+      outputName
+    );
+    
+    console.log('Conversion complete, reading output...');
+    
+    // خواندن خروجی
+    const data = ffmpeg.FS('readFile', outputName);
+    
+    // پاک کردن فایل‌های موقت
+    try {
+      ffmpeg.FS('unlink', inputName);
+      ffmpeg.FS('unlink', outputName);
+    } catch (e) {
+      console.warn('Cleanup warning:', e);
+    }
+    
+    console.log(`✅ Conversion complete`);
+    return new Blob([data.buffer], { type: 'audio/mp3' });
+    
+  } catch (error) {
+    console.error('Conversion error:', error);
+    
+    // Clean up در صورت خطا
+    try {
+      ffmpeg.FS('unlink', inputName);
+    } catch (e) {}
+    try {
+      ffmpeg.FS('unlink', outputName);
+    } catch (e) {}
+    
+    throw error;
+  }
 }
 
 function getAudioDuration(blob) {
@@ -343,10 +374,12 @@ function getAudioDuration(blob) {
     const audio = new Audio();
     const url = URL.createObjectURL(blob);
     audio.src = url;
+    
     audio.onloadedmetadata = () => {
       resolve(audio.duration);
       URL.revokeObjectURL(url);
     };
+    
     audio.onerror = () => {
       reject(new Error('خطا در بارگذاری صوت'));
       URL.revokeObjectURL(url);
@@ -354,76 +387,208 @@ function getAudioDuration(blob) {
   });
 }
 
-async function fetchFile(file) {
-  return new Uint8Array(await file.arrayBuffer());
+async function adjustAudioSpeed(audioBlob, speedRatio) {
+  const ffmpeg = window.state.ffmpeg;
+  
+  if (!ffmpeg || !ffmpeg.isLoaded()) {
+    throw new Error('FFmpeg is not loaded');
+  }
+  
+  const inputName = `input_audio_${Date.now()}.mp3`;
+  const outputName = `output_adjusted_${Date.now()}.mp3`;
+  
+  console.log(`🎚️ Adjusting speed by ${speedRatio.toFixed(2)}x`);
+  
+  try {
+    // تبدیل blob به Uint8Array
+    const audioData = new Uint8Array(await audioBlob.arrayBuffer());
+    
+    // نوشتن فایل ورودی
+    ffmpeg.FS('writeFile', inputName, audioData);
+    
+    // محاسبه atempo (بین 0.5 تا 2.0)
+    let tempoFilter = '';
+    let tempo = speedRatio;
+    
+    // FFmpeg atempo محدودیت 0.5 تا 2.0 دارد
+    // برای سرعت‌های بالاتر باید زنجیره‌ای استفاده کنیم
+    if (tempo > 4) {
+      tempoFilter = 'atempo=2.0,atempo=2.0';
+    } else if (tempo > 2) {
+      tempoFilter = `atempo=2.0,atempo=${(tempo / 2).toFixed(2)}`;
+    } else if (tempo < 0.5) {
+      tempoFilter = 'atempo=0.5';
+    } else {
+      tempoFilter = `atempo=${tempo.toFixed(2)}`;
+    }
+    
+    console.log('Using filter:', tempoFilter);
+    
+    // اجرای FFmpeg با فیلتر atempo
+    await ffmpeg.run(
+      '-i', inputName,
+      '-filter:a', tempoFilter,
+      '-vn',
+      '-acodec', 'libmp3lame',
+      '-q:a', '2',
+      outputName
+    );
+    
+    // خواندن خروجی
+    const data = ffmpeg.FS('readFile', outputName);
+    
+    // پاک کردن فایل‌های موقت
+    try {
+      ffmpeg.FS('unlink', inputName);
+      ffmpeg.FS('unlink', outputName);
+    } catch (e) {}
+    
+    console.log(`✅ Speed adjusted successfully`);
+    return new Blob([data.buffer], { type: 'audio/mp3' });
+    
+  } catch (error) {
+    console.error('Speed adjustment error:', error);
+    
+    // Clean up
+    try {
+      ffmpeg.FS('unlink', inputName);
+      ffmpeg.FS('unlink', outputName);
+    } catch (e) {}
+    
+    throw error;
+  }
 }
 
+// ===== Results Display =====
 function showResults() {
   showSection('results');
   elements.resultsTableBody.innerHTML = '';
+  
   window.state.results.forEach(result => {
     const tr = document.createElement('tr');
+    
     if (result.status === 'success') {
+            // ذخیره نام فایل برای دانلود
+      const safeFileName = escapeHtml(result.name);
+      const dataIndex = window.state.results.indexOf(result);
+      
       tr.innerHTML = `
-        <td>${result.name}</td>
+        <td>${safeFileName}</td>
         <td>${result.originalDuration} ثانیه</td>
         <td>${result.newDuration} ثانیه</td>
         <td>${result.speedRatio}x</td>
         <td>
-          <button onclick="downloadFile('${result.name}')" class="btn btn-primary btn-sm">دانلود</button>
-        </td>`;
+          <button onclick="downloadFile(${dataIndex})" class="btn btn-primary btn-sm">
+            دانلود
+          </button>
+        </td>
+      `;
     } else {
       tr.innerHTML = `
-        <td colspan="5" style="color: var(--danger)">
-          ${result.name} - خطا: ${result.error}
-        </td>`;
+        <td colspan="5" style="color: #dc3545;">
+          ❌ ${escapeHtml(result.name)} - خطا: ${escapeHtml(result.error)}
+        </td>
+      `;
     }
+    
     elements.resultsTableBody.appendChild(tr);
   });
+  
   showToast('پردازش با موفقیت انجام شد!', 'success');
+  console.log('✅ All files processed successfully!');
 }
 
-function downloadFile(fileName) {
-  const result = window.state.results.find(r => r.name === fileName);
-  if (!result || !result.blob) return;
+function downloadFile(index) {
+  const result = window.state.results[index];
+  
+  if (!result || !result.blob) {
+    showToast('فایل یافت نشد', 'error');
+    return;
+  }
+
   const url = URL.createObjectURL(result.blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = fileName;
+  a.download = result.name;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  
+  // Clean up
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+  
   showToast('دانلود شروع شد', 'success');
+  console.log('📥 Download started:', result.name);
 }
 
+// ===== Reset Application =====
 function resetApp() {
   window.state.files = [];
   window.state.results = [];
   window.state.currentProcessing = 0;
   elements.fileInput.value = '';
   elements.filesList.classList.add('hidden');
+  
+  // Reset progress bars
+  if (elements.ffmpegProgress) {
+    elements.ffmpegProgress.style.width = '0%';
+    elements.ffmpegProgress.textContent = '0%';
+  }
+  if (elements.fileProgress) {
+    elements.fileProgress.style.width = '0%';
+    elements.fileProgress.textContent = '0%';
+  }
+  
   showSection('upload');
   showToast('برنامه بازنشانی شد', 'info');
+  console.log('🔄 App reset');
 }
 
+// ===== Utility Functions =====
 function showToast(message, type = 'info') {
   elements.toast.textContent = message;
-  elements.toast.className = 'toast toast-' + type;
+  elements.toast.className = `toast toast-${type}`;
   elements.toast.classList.remove('hidden');
-  setTimeout(() => elements.toast.classList.add('hidden'), 3000);
+  
+  setTimeout(() => {
+    elements.toast.classList.add('hidden');
+  }, 3000);
 }
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
+  
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
   return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
 }
 
-// Make some functions globally accessible for inline onclick handlers
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ===== Global Functions (for inline event handlers) =====
 window.removeFile = removeFile;
 window.downloadFile = downloadFile;
 
+// ===== Start Application =====
 document.addEventListener('DOMContentLoaded', init);
+
+// ===== Service Worker Registration (Optional) =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('✅ Service Worker registered:', registration.scope);
+      })
+      .catch(error => {
+        console.log('⚠️ Service Worker registration failed:', error);
+      });
+  });
+}
+
+console.log('📱 MP4 to MP3 Adjuster - Script loaded');

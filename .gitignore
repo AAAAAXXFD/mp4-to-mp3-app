@@ -1,0 +1,6 @@
+node_modules/
+assets/vendor/
+*.backup*
+serve.py
+server.js
+server-config.js

@@ -2,97 +2,165 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تبدیل ویدیو به MP3 و تنظیم سرعت</title>
-  <base href="/mp4-to-mp3-app/">
+  <meta name="description" content="تبدیل آنلاین ویدیو به MP3 با امکان تنظیم سرعت و مدت زمان">
   <meta name="theme-color" content="#1a73e8">
+  
+  <!-- Base URL for GitHub Pages -->
+  <base href="/mp4-to-mp3-app/">
+  
+  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.svg">
+  
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/rtl.css">
   <link rel="stylesheet" href="assets/css/animations.css">
-  <link rel="icon" href="assets/icons/icon-192.svg">
 </head>
 <body>
   <div id="app" class="app-container">
-    <header class="app-header">
-      <div class="header-content">
-        <div class="logo-section">
-          <svg class="logo-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M9 18V5l12-2v13"></path>
-            <circle cx="6" cy="18" r="3"></circle>
-            <circle cx="18" cy="16" r="3"></circle>
-          </svg>
-          <h1 class="app-title">تبدیل ویدیو به MP3</h1>
+    
+    <!-- ========== بخش آپلود (مرحله 1) ========== -->
+    <section id="uploadSection" class="section active">
+      <div class="section-header">
+        <span class="step-badge">مرحله ۱</span>
+        <h2 class="section-title">📤 آپلود ویدیوها</h2>
+        <p class="section-description">فایل‌های ویدیویی خود را انتخاب کنید (حداکثر ۱۴ فایل)</p>
+      </div>
+      
+      <!-- Input مخفی برای انتخاب فایل -->
+      <input 
+        id="fileInput" 
+        type="file" 
+        accept="video/*,video/mp4,video/webm,video/ogg" 
+        multiple 
+        hidden
+        aria-label="انتخاب فایل‌های ویدیویی"
+      >
+      
+      <!-- Drop Zone -->
+      <div id="dropZone" class="drop-zone" role="button" tabindex="0">
+        <svg class="drop-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <p class="drop-text">فایل‌ها را اینجا رها کنید یا کلیک کنید</p>
+        <button id="selectFilesBtn" class="btn btn-primary" type="button">
+          📁 انتخاب فایل‌ها
+        </button>
+      </div>
+      
+      <!-- لیست فایل‌های انتخاب شده -->
+      <div id="filesList" class="files-list hidden">
+        <div class="list-header">
+          <div class="files-count">
+            تعداد فایل‌ها: <strong id="filesCount">0</strong>
+          </div>
+          <button id="clearFilesBtn" class="btn btn-secondary btn-sm" type="button">
+            🗑️ پاک کردن همه
+          </button>
+        </div>
+        
+        <ul id="filesContainer" class="files-container" role="list"></ul>
+        
+        <div class="action-buttons">
+          <button id="continueBtn" class="btn btn-primary btn-large" type="button">
+            ادامه ➡️
+          </button>
         </div>
       </div>
-    </header>
+    </section>
 
-    <main class="main-content">
-      <!-- مرحله آپلود -->
-      <section id="uploadSection" class="section active">
-        <div class="section-header">
-          <span class="step-badge">مرحله ۱</span>
-          <h2 class="section-title">آپلود ویدیوها</h2>
-          <p class="section-description">فایل‌های MP4 را بکشید و رها کنید یا از دکمه انتخاب کنید</p>
-        </div>
-
-        <input id="fileInput" type="file" accept="video/*" multiple hidden>
-        <div id="dropZone" class="drop-zone">
-          <svg class="drop-icon" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 5v14M5 12h14"></path>
-          </svg>
-          <p class="drop-text">برای انتخاب فایل کلیک کنید یا فایل‌ها را اینجا رها کنید</p>
-          <button id="selectFilesBtn" class="btn btn-primary">انتخاب فایل‌ها</button>
-        </div>
-
-        <div id="filesList" class="files-list hidden">
-          <div class="list-header">
-            <div>تعداد فایل‌ها: <span id="filesCount">0</span></div>
-            <button id="clearFilesBtn" class="btn-secondary btn">پاک کردن همه</button>
-          </div>
-          <ul id="filesContainer"></ul>
-          <div class="action-buttons">
-            <button id="continueBtn" class="btn btn-primary">ادامه</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- مرحله تنظیمات -->
-      <section id="settingsSection" class="section hidden">
-        <div class="section-header">
-          <span class="step-badge">مرحله ۲</span>
-          <h2 class="section-title">تنظیم مدت هدف</h2>
-          <p class="section-description">مدت زمان هدف برای فایل خروجی (بر حسب ثانیه)</p>
-        </div>
+    <!-- ========== بخش تنظیمات (مرحله 2) ========== -->
+    <section id="settingsSection" class="section">
+      <div class="section-header">
+        <span class="step-badge">مرحله ۲</span>
+        <h2 class="section-title">⚙️ تنظیم مدت هدف</h2>
+        <p class="section-description">مدت زمان نهایی که می‌خواهید فایل‌های صوتی داشته باشند</p>
+      </div>
+      
+      <div class="settings-form">
         <div class="form-group">
-          <label for="targetDuration">مدت هدف (ثانیه)</label>
-          <input id="targetDuration" class="form-input" type="number" min="1" value="60">
+          <label for="targetDuration" class="form-label">
+            ⏱️ مدت زمان هدف (ثانیه)
+          </label>
+          <input 
+            id="targetDuration" 
+            class="form-input" 
+            type="number" 
+            min="1" 
+            max="3600"
+            value="60"
+            required
+            aria-describedby="durationHelp"
+          >
+          <small id="durationHelp" class="form-help">
+            💡 سرعت پخش بر اساس این مدت تنظیم می‌شود
+          </small>
         </div>
+        
         <div class="action-buttons">
-          <button id="backBtn" class="btn btn-secondary">بازگشت</button>
-          <button id="startProcessBtn" class="btn btn-primary">شروع پردازش</button>
+          <button id="backBtn" class="btn btn-secondary" type="button">
+            ⬅️ بازگشت
+          </button>
+          <button id="startProcessBtn" class="btn btn-primary btn-large" type="button">
+            🚀 شروع پردازش
+          </button>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- مرحله پردازش -->
-      <section id="processingSection" class="section hidden">
-        <div id="ffmpegLoading" class="processing-card">
-          <p>در حال بارگذاری ابزار پردازش...</p>
-          <div class="progress-bar"><div id="ffmpegProgress" class="progress-fill" style="width:0%"></div></div>
+    <!-- ========== بخش پردازش (مرحله 3) ========== -->
+    <section id="processingSection" class="section">
+      <div class="section-header">
+        <span class="step-badge processing">⏳ در حال پردازش</span>
+        <h2 class="section-title">پردازش فایل‌ها</h2>
+      </div>
+      
+      <!-- بارگذاری FFmpeg -->
+      <div id="ffmpegLoading" class="processing-card">
+        <div class="processing-icon">🔧</div>
+        <p class="processing-text">در حال بارگذاری ابزار پردازش...</p>
+        <div class="progress-bar">
+          <div id="ffmpegProgress" class="progress-fill" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <span class="progress-text">0%</span>
+          </div>
         </div>
-        <div id="filesProcessing" class="processing-card hidden">
-          <p>در حال پردازش: <span id="currentFileIndex">0</span>/<span id="totalFiles">0</span></p>
-          <p id="currentFileName">—</p>
-          <div class="progress-bar"><div id="fileProgress" class="progress-fill" style="width:0%"></div></div>
+      </div>
+      
+      <!-- پردازش فایل‌ها -->
+      <div id="filesProcessing" class="processing-card hidden">
+        <div class="processing-icon">🎬</div>
+        <p class="processing-text">
+          در حال پردازش فایل: 
+          <strong id="currentFileIndex">0</strong> از 
+          <strong id="totalFiles">0</strong>
+        </p>
+        <p id="currentFileName" class="current-file-name">—</p>
+        <div class="progress-bar">
+          <div id="fileProgress" class="progress-fill" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <span class="progress-text">0%</span>
+          </div>
         </div>
-      </section>
+        <p class="processing-note">⚡ لطفاً صبور باشید، این کار ممکن است چند دقیقه طول بکشد</p>
+      </div>
+    </section>
 
-      <!-- مرحله نتایج -->
-      <section id="resultsSection" class="section hidden">
-        <div class="section-header">
-          <span class="step-badge success">پایان</span>
-          <h2 class="section-title">نتایج</h2>
-        </div>
+    <!-- ========== بخش نتایج (مرحله 4) ========== -->
+    <section id="resultsSection" class="section">
+      <div class="section-header">
+        <span class="step-badge success">✅ پایان</span>
+        <h2 class="section-title">🎉 نتایج پردازش</h2>
+        <p class="section-description">فایل‌های شما آماده دانلود هستند</p>
+      </div>
+      
+      <div class="results-container">
         <table class="results-table">
           <thead>
             <tr>
@@ -103,29 +171,46 @@
               <th>دانلود</th>
             </tr>
           </thead>
-          <tbody id="resultsTableBody"></tbody>
+          <tbody id="resultsTableBody">
+            <!-- نتایج به صورت داینامیک اضافه می‌شوند -->
+          </tbody>
         </table>
-        <div class="action-buttons">
-          <button id="startOverBtn" class="btn btn-secondary">شروع مجدد</button>
-        </div>
-      </section>
-    </main>
+      </div>
+      
+      <div class="action-buttons">
+        <button id="startOverBtn" class="btn btn-secondary btn-large" type="button">
+          🔄 شروع مجدد
+        </button>
+      </div>
+    </section>
+    
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <!-- ========== Toast Notification ========== -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="polite"></div>
 
-  <script src="assets/js/unregister-sw.js"></script>
-  <script src="assets/vendor/@ffmpeg/ffmpeg/ffmpeg.js"></script>
-  <script src="assets/vendor/@ffmpeg/util/index.js"></script>
-  <script src="assets/vendor/@ffmpeg/ffmpeg/ffmpeg.js"></script>
-  <script src="assets/vendor/@ffmpeg/util/index.js"></script>
+  <!-- ========== Scripts ========== -->
+  
+  <!-- FFmpeg از CDN -->
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
+  <!-- Main Application -->
   <script src="assets/js/app.js"></script>
-  <script src="assets/vendor/@ffmpeg/ffmpeg/ffmpeg.js"></script>
-  <script src="assets/vendor/@ffmpeg/util/index.js"></script>
+
+  <!-- Service Worker برای PWA -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/mp4-to-mp3-app/service-worker.js');
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/mp4-to-mp3-app/service-worker.js')
+          .then(reg => console.log('✅ Service Worker registered'))
+          .catch(err => console.log('⚠️ Service Worker failed:', err));
+      });
     }
+  </script>
+
+  <script>
+    console.log('🎵 MP4 to MP3 Converter - Ready');
+    console.log('FFmpeg available:', typeof window.FFmpeg !== 'undefined');
   </script>
 </body>
 </html>
