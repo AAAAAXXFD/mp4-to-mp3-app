@@ -81,8 +81,8 @@ function checkBrowserSupport() {
   const requiredFeatures = {
     FileAPI: typeof File !== 'undefined',
     AudioAPI: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
-    WebAssembly: typeof WebAssembly !== 'undefined',
-    SharedArrayBuffer: typeof SharedArrayBuffer !== 'undefined'
+    WebAssembly: typeof WebAssembly !== 'undefined'
+    // حذف SharedArrayBuffer چک
   };
 
   const unsupported = Object.entries(requiredFeatures)
@@ -90,7 +90,7 @@ function checkBrowserSupport() {
     .map(([key]) => key);
 
   if (unsupported.length > 0) {
-    showToast(`مرورگر یا سرور از ویژگی‌های لازم پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
+    showToast(`مرورگر از ویژگی‌های لازم پشتیبانی نمی‌کند: ${unsupported.join(', ')}`, 'error');
     console.error('Missing features:', unsupported);
     return false;
   }
@@ -254,15 +254,40 @@ async function startProcessing() {
 
 // ===== FFmpeg Loading - FIXED for 0.10.0 API =====
 async function loadFFmpeg() {
-  if (!window.state.ffmpeg) {
-    window.state.ffmpeg = createFFmpeg({
+  if (window.state.ffmpeg) return;
+  
+  console.log('🔄 Starting FFmpeg load...');
+  showToast('در حال بارگذاری ابزار پردازش...', 'info');
+  
+  try {
+    const { createFFmpeg, fetchFile } = window.FFmpeg;
+    
+    const ffmpeg = createFFmpeg({
       log: false,
-      corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
-      // بدون mainName
+      // نسخه single-thread که SharedArrayBuffer نمی‌خواهد
+      corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js',
+      progress: ({ ratio }) => {
+        const percent = Math.round(ratio * 100);
+        if (elements.ffmpegProgress) {
+          elements.ffmpegProgress.style.width = percent + '%';
+          elements.ffmpegProgress.textContent = percent + '%';
+        }
+      }
     });
-    await window.state.ffmpeg.load();
+    
+    await ffmpeg.load();
+    
+    window.state.ffmpeg = ffmpeg;
+    window.fetchFile = fetchFile;
+    
+    console.log('✅ FFmpeg loaded!');
+    showToast('ابزار پردازش آماده شد', 'success');
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    showToast('خطا: ' + error.message, 'error');
+    throw error;
   }
-  return window.state.ffmpeg;
 }
 
 // ===== File Processing =====

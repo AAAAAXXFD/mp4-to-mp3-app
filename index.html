@@ -7,9 +7,6 @@
   <meta name="description" content="تبدیل آنلاین ویدیو به MP3 با امکان تنظیم سرعت و مدت زمان">
   <meta name="theme-color" content="#1a73e8">
   
-  <!-- Base URL for GitHub Pages -->
-  <base href="/mp4-to-mp3-app/">
-  
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
   
@@ -193,24 +190,17 @@
   
   <!-- FFmpeg از CDN -->
   <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-
-  <!-- Main Application -->
   <script src="assets/js/app.js"></script>
-
-  <!-- Service Worker برای PWA -->
+  
   <script>
+    // Service Worker Registration با مسیر صحیح
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/mp4-to-mp3-app/service-worker.js')
+        navigator.serviceWorker.register('./service-worker.js')
           .then(reg => console.log('✅ Service Worker registered'))
           .catch(err => console.log('⚠️ Service Worker failed:', err));
       });
     }
-  </script>
-
-  <script>
-    console.log('🎵 MP4 to MP3 Converter - Ready');
-    console.log('FFmpeg available:', typeof window.FFmpeg !== 'undefined');
   </script>
 </body>
 </html>

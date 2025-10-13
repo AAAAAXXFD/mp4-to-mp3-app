@@ -1,12 +1,13 @@
 {
   "name": "تبدیل ویدیو به MP3",
-  "short_name": "MP4toMP3",
+  "short_name": "MP3 Converter",
   "description": "تبدیل ویدیو به MP3 و تنظیم سرعت",
-  "start_url": "/mp4-to-mp3-app/",
-  "scope": "/mp4-to-mp3-app/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
+  "orientation": "any",
   "icons": [
     {
       "src": "assets/icons/icon-192.svg",

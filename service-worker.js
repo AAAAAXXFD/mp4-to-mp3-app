@@ -1,22 +1,23 @@
-const CACHE_NAME = 'mp3-converter-v2';
+const CACHE_NAME = 'mp3-converter-v3';
 const BASE_URL = '/mp4-to-mp3-app';
 
 const urlsToCache = [
-  `${BASE_URL}/`,
-  `${BASE_URL}/index.html`,
-  `${BASE_URL}/manifest.json`,
-  `${BASE_URL}/assets/css/main.css`,
-  `${BASE_URL}/assets/css/rtl.css`,
-  `${BASE_URL}/assets/css/animations.css`,
-  `${BASE_URL}/assets/js/app.js`,
-  `${BASE_URL}/assets/icons/icon-192.svg`,
-  `${BASE_URL}/assets/icons/icon-512.svg`
+  './',
+  './index.html',
+  './manifest.json',
+  './assets/css/main.css',
+  './assets/css/rtl.css',
+  './assets/css/animations.css',
+  './assets/js/app.js',
+  './assets/icons/icon-192.svg',
+  './assets/icons/icon-512.svg'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(urlsToCache))
+      .catch(err => console.error('Cache error:', err))
   );
   self.skipWaiting();
 });
@@ -25,11 +26,8 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
       );
     })
   );
@@ -37,11 +35,9 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // CDN را کش نکن
-  if (url.hostname.includes('unpkg.com') || 
-      url.hostname.includes('jsdelivr.net')) {
+  // Skip CDN resources
+  if (event.request.url.includes('unpkg.com') || 
+      event.request.url.includes('jsdelivr')) {
     return;
   }
   
