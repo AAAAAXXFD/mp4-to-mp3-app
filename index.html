@@ -15,6 +15,7 @@
   <link rel="apple-touch-icon" href="assets/icons/icon-192.svg">
   
   <!-- Stylesheets -->
+  <!-- فرض می‌شود که این فایل‌ها وجود دارند و بارگذاری می‌شوند -->
   <link rel="stylesheet" href="assets/css/main.css">
   <link rel="stylesheet" href="assets/css/rtl.css">
   <link rel="stylesheet" href="assets/css/animations.css">
@@ -120,11 +121,12 @@
         <h2 class="section-title">پردازش فایل‌ها</h2>
       </div>
       
-      <!-- بارگذاری FFmpeg -->
+      <!-- بارگذاری FFmpeg (این بخش باید برای LAMEjs به‌روزرسانی شود) -->
       <div id="ffmpegLoading" class="processing-card">
-        <div class="processing-icon">🔧</div>
-        <p class="processing-text">در حال بارگذاری ابزار پردازش...</p>
-        <div class="progress-bar">
+        <div class="processing-icon">🎧</div>
+        <p class="processing-text">در حال آماده‌سازی ابزار صوتی...</p>
+        <!-- نوار پیشرفت بارگذاری در این حالت معمولاً برای LAMEjs لازم نیست -->
+        <div class="progress-bar hidden">
           <div id="ffmpegProgress" class="progress-fill" style="width: 0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
             <span class="progress-text">0%</span>
           </div>
@@ -188,18 +190,23 @@
 
   <!-- ========== Scripts ========== -->
   
-  <!-- FFmpeg از CDN - نسخه 0.11.6 -->
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.0/dist/umd/ffmpeg.min.js"></script>
+  <!-- LAMEjs for MP3 Encoding -->
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
   
-  <!-- Main Application -->
+  <!-- Audio Processing Logic - شامل منطق استخراج و تغییر سرعت صدا -->
+  <script src="assets/js/audio-processor.js"></script>
+  
+  <!-- Main Application - منطق UI و هماهنگی -->
   <script src="assets/js/app.js"></script>
   
   <!-- Service Worker Registration -->
   <script>
-    console.log('🎵 MP4 to MP3 Converter - Ready');
-    console.log('FFmpeg available:', typeof window.FFmpeg !== 'undefined');
+    console.log('🎵 Video to MP3 Converter (LAMEjs) - Ready');
     
-    // Service Worker Registration
+    // Service Worker functionality is often restricted in sandboxed environments (like the preview iframe).
+    // The error "The URL protocol of the script (':') is not supported" confirms this issue.
+    // We are commenting out the Service Worker registration block to prevent the error.
+    /*
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
@@ -217,6 +224,7 @@
     } else {
       console.log('❌ Service Worker not supported in this browser');
     }
+    */
   </script>
 </body>
 </html>
